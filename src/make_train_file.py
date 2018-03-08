@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Makes the dataset for the conversational model and the corresponding index to word file"""
 from os import chdir
-from os.path import dirname, abspath, isfile
+from os.path import dirname, abspath, isfile, join
 from argparse import ArgumentParser
 import logging
 import re
@@ -30,7 +30,7 @@ def make_index_word(sequences):
     index_word.append('$_EOS_$')
     index_word.append('$_UNK_$')
 
-	# Make word counts
+    # Make word counts
     word_counts = {}
     for sent in sequences:
         for word in sent:
@@ -60,24 +60,24 @@ def main():
     parser.add_argument("--glove", required=True,
                         help="300-dimensional GloVe embeddings file")
     args = vars(parser.parse_args())
-    corpus_dir = args.get("corpus") + "\\"
+    corpus_dir = args.get("corpus")
     glove_file = args.get("glove")
-    passed, missing = _check_files([corpus_dir + "movie_lines.txt",
-                                    corpus_dir + "movie_conversations.txt",
+    passed, missing = _check_files([join(corpus_dir, "movie_lines.txt"),
+                                    join(corpus_dir, "movie_conversations.txt"),
                                     glove_file])
     if not passed:
         for _file in missing:
             LOGGER.error("Cannot find %s", abspath(_file))
         return
 
-    with open(corpus_dir + "movie_lines.txt") as m_lines_file:
+    with open(join(corpus_dir, "movie_lines.txt"), encoding="cp1252") as m_lines_file:
         lines_dict = {}
         for line in m_lines_file:
             _split = line.split(" +++$+++ ")
             lid = int(re.match(r'L(\d+)', _split[0]).group(1))
             lines_dict[lid] = _split[-1].rstrip('\n')
 
-    with open(corpus_dir + "movie_conversations.txt") as m_conv_file:
+    with open(join(corpus_dir, "movie_conversations.txt")) as m_conv_file:
         conversations = []
         for line in m_conv_file:
             _list = line.split(" +++$+++ ")[-1]
@@ -93,7 +93,7 @@ def main():
     pickle.dump(index_word, open("data/index_word.data", "wb"))
 
     conversations = conversations[:MAX_CONVERSATIONS]
-    # Creat training set
+    # Create training set
     print("Creating training set...")
     with open("data/train.tsv", "wt") as train_file:
         for conv in conversations:
